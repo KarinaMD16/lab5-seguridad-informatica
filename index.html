@@ -15,13 +15,15 @@
       #nombre, #m { display: inline-block;}
       #m {width: 69%; margin-right: 4px;}
       #nombre {width: 20%}
+      .chat-image, .chat-video { display: block; max-width: 400px; max-height: 400px; width: auto; margin-top: 5px; border-radius: 4px; }
+      iframe.chat-video { width: 400px; height: 225px; max-width: 100%; }
     </style>
   </head>
   <body>
     <ul id="messages"></ul>
     <form action="">
       <input id="nombre" autocomplete="off" placeholder="Username"/>
-      <input id="m" autocomplete="off" placeholder="Escriba un mensaje" /><button>Send</button>
+      <input id="m" autocomplete="off" placeholder="Escriba un mensaje o pegue la URL de una imagen o video" /><button>Send</button>
     </form>
     <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -46,8 +48,12 @@
         // emite evento al servidor
         
         $('form').submit(function(){
-            var nombreTxt = $('#nombre').val() || "Anomimo";
-            var mensajeTxt = $('#m').val();
+            var nombreTxt = $('#nombre').val() || "Anonimo";
+            var mensajeTxt = $('#m').val().trim();
+
+            if (mensajeTxt == "") {
+                return false;
+            }
 
             if (colorHexTxt == "") {
                 colorHexTxt = getRandomColor();
@@ -63,9 +69,15 @@
 
         socket.on('Evento-Mensaje-Server', function(msg){
             var msgJson = JSON.parse(msg);
+            // el servidor ya escapa el texto y convierte las URLs de imagen/video en HTML
             var mensajeDisplay = "<b style='color:"+ msgJson.color +"'>" + msgJson.nombre + "</b>: " + msgJson.mensaje;
-            $('#messages').append($('<li>').html(mensajeDisplay));
-            window.scrollTo(0, document.body.scrollHeight);
+            var item = $('<li>').html(mensajeDisplay);
+            $('#messages').append(item);
+
+            // desplazar al final; las imagenes/videos cambian de alto al cargar
+            var scrollAbajo = function(){ window.scrollTo(0, document.body.scrollHeight); };
+            item.find('img, video').on('load loadedmetadata', scrollAbajo);
+            scrollAbajo();
         });
 
       });

@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Variables de entorno (claves, contrasenas)
+.env
+.env.*
+
+# Jest: reporte de cobertura
+coverage/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.idea/
+*.swp
