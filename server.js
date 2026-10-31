@@ -1,6 +1,9 @@
 
 // npm install para descargar los paquetes...
 
+// Sentry debe cargarse antes que el resto de librerias
+var Sentry = require('./instrument');
+
 // libreriuas
 var validation = require('./libs/unalib');
 var express = require('express');
@@ -33,6 +36,20 @@ app.post('/mensajes', function (req, res) {
   res.status(201).json(obj);
 });
 
+
+// TEMPORAL (laboratorio, parte 1.2): genera un error controlado para Sentry.
+// Solo existe si SENTRY_TEST_ROUTE=true. Quitar esta ruta y la variable
+// despues de capturar la evidencia.
+if (process.env.SENTRY_TEST_ROUTE === 'true') {
+  app.get('/debug-sentry', function () {
+    throw new Error('Error controlado de prueba para Sentry (UNA Chat)');
+  });
+}
+
+// Sentry captura los errores de Express (debe ir despues de las rutas)
+if (Sentry) {
+  Sentry.setupExpressErrorHandler(app);
+}
 
 // escuchar una conexion por socket
 io.on('connection', function(socket){
