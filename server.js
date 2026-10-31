@@ -37,14 +37,6 @@ app.post('/mensajes', function (req, res) {
 });
 
 
-// TEMPORAL (laboratorio, parte 1.2): genera un error controlado para Sentry.
-// Solo existe si SENTRY_TEST_ROUTE=true. Quitar esta ruta y la variable
-// despues de capturar la evidencia.
-if (process.env.SENTRY_TEST_ROUTE === 'true') {
-  app.get('/debug-sentry', function () {
-    throw new Error('Error controlado de prueba para Sentry (UNA Chat)');
-  });
-}
 
 // Sentry captura los errores de Express (debe ir despues de las rutas)
 if (Sentry) {
