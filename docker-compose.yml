@@ -1,0 +1,18 @@
+# Iniciar:  docker compose up --build -d
+# Chat:     http://localhost:8080
+# Detener:  docker compose down
+services:
+  una-chat:
+    build: .
+    image: una-chat:local
+    container_name: una-chat
+    ports:
+      - "8080:3000"          # equipo:contenedor
+    init: true               # reenvia Ctrl+C / docker stop a Node
+    env_file:
+      - .env                 # endpoint y token de Grafana Cloud (no se sube a git)
+    environment:
+      OTEL_SERVICE_NAME: una-chat-api
+      # mismo entorno "local" que la parte 2, marcando que corre en Docker
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=local,container.runtime=docker
+    restart: unless-stopped

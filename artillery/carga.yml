@@ -1,0 +1,22 @@
+# Prueba de carga local de UNA Chat (parte 3.2)
+# 5 usuarios virtuales nuevos por segundo durante 60 s, una solicitud cada uno
+# -> objetivo: 5 solicitudes/s y 300 solicitudes en total.
+# Destino: el contenedor Docker local (no Render ni otro servicio en la nube).
+# Ejecutar:  npx artillery run --output artillery/reporte.json artillery/carga.yml
+config:
+  target: "http://localhost:8080"
+  phases:
+    - name: carga-5rps-60s
+      duration: 60
+      arrivalRate: 5
+  http:
+    timeout: 10
+scenarios:
+  - name: enviar-mensaje
+    flow:
+      - post:
+          url: "/mensajes"
+          json:
+            nombre: "Artillery"
+            mensaje: "Mensaje de carga {{ $randomNumber(1, 100000) }}"
+            color: "#123ABC"

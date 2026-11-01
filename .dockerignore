@@ -1,0 +1,13 @@
+# nunca copiar credenciales a la imagen: se pasan al iniciar el contenedor
+.env
+.env.*
+!.env.example
+node_modules
+.git
+.github
+test
+tests
+test-results
+playwright-report
+artillery/*.json
+*.log
