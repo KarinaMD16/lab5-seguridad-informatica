@@ -17,11 +17,26 @@
       #nombre {width: 20%}
       .chat-image, .chat-video { display: block; max-width: 400px; max-height: 400px; width: auto; margin-top: 5px; border-radius: 4px; }
       iframe.chat-video { width: 400px; height: 225px; max-width: 100%; }
+      #sesion { padding: 8px 10px; background: #1f2937; color: #fff; }
+      #sesion button { margin-left: 10px; padding: 4px 10px; border: none; background: rgb(130, 224, 255); cursor: pointer; }
+      #login-gate { max-width: 360px; margin: 80px auto; padding: 24px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 15px; }
+      #login-gate h2 { margin-bottom: 10px; }
+      #login-gate p { margin-bottom: 14px; }
+      #login-error { color: #b91c1c; }
+      #login-button { padding: 10px 18px; border: none; background: rgb(130, 224, 255); cursor: pointer; font-size: 15px; }
+      [hidden] { display: none !important; }
     </style>
   </head>
   <body>
+    <div id="sesion" hidden>Sesión iniciada como <b id="usuario"></b> <span id="correo"></span><button type="button" id="logout-button">Cerrar sesión</button></div>
+    <section id="login-gate" hidden>
+      <h2>Entra a la sala</h2>
+      <p>La sala de UNA Chat pide iniciar sesión con Auth0.</p>
+      <p id="login-error" hidden role="alert"></p>
+      <button type="button" id="login-button">Iniciar sesión</button>
+    </section>
     <ul id="messages"></ul>
-    <form action="">
+    <form action="" id="chat-form">
       <input id="nombre" autocomplete="off" placeholder="Username"/>
       <input id="m" autocomplete="off" placeholder="Escriba un mensaje o pegue la URL de una imagen o video" /><button>Send</button>
     </form>
@@ -42,8 +57,60 @@
         return color;
      }
 
+      // ---------- sesion con Auth0 ----------
+      var errores = {
+        access_denied: 'Auth0 no autorizó el inicio de sesión.',
+        state: 'La solicitud de inicio de sesión expiró. Intentá de nuevo.',
+        login_failed: 'No se pudo completar el inicio de sesión.',
+        login_unavailable: 'El inicio de sesión no está disponible.'
+      };
+
+      function mostrarLogin(mensaje) {
+        $('#chat-form, #messages, #sesion').prop('hidden', true);
+        $('#login-gate').prop('hidden', false);
+        if (mensaje) {
+          $('#login-error').prop('hidden', false).text(mensaje);
+        }
+        $('#login-button').off('click').on('click', function () {
+          window.location.assign('/auth/login');
+        });
+      }
+
+      function mostrarSesion(usuario) {
+        $('#usuario').text(usuario.name);
+        $('#correo').text(usuario.email ? '(' + usuario.email + ')' : '');
+        $('#nombre').val(usuario.name).prop('readonly', true);
+        $('#sesion').prop('hidden', false);
+        $('#logout-button').on('click', function () {
+          window.location.assign('/auth/logout');
+        });
+      }
+
       $(function () {
+        var params = new URLSearchParams(window.location.search);
+        var error = errores[params.get('error')] || '';
+
+        fetch('/auth/config').then(function (r) { return r.json(); }).then(function (config) {
+          // sin Auth0 configurado, el chat queda abierto (pruebas)
+          if (!config.enabled) return iniciarChat();
+          return fetch('/sala', { headers: { accept: 'application/json' } }).then(function (r) {
+            if (r.status !== 200) return mostrarLogin(error);
+            return r.json().then(function (usuario) {
+              mostrarSesion(usuario);
+              iniciarChat();
+            });
+          });
+        }).catch(function () {
+          mostrarLogin('No se pudo contactar al servidor.');
+        });
+      });
+
+      function iniciarChat() {
         var socket = io();
+
+        socket.on('connect_error', function () {
+          mostrarLogin('No se pudo conectar al chat. Iniciá sesión de nuevo.');
+        });
 
         // emite evento al servidor
         
@@ -80,7 +147,7 @@
             scrollAbajo();
         });
 
-      });
+      }
     </script>
   </body>
 </html>
